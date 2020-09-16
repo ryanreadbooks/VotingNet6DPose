@@ -181,6 +181,6 @@ class VotingNetSimple(nn.Module):
 
 	def forward(self, x) -> (torch.Tensor, torch.Tensor):
 		x2s, x4s, x8s, x16s, x = self.backbone(x)
-		mask = self.mask_branch(x2s, x4s, x8s, x16s, x)
-		vector_map = self.vector_branch(x2s, x4s, x8s, x16s, x)
+		mask = self.mask_branch.forward(x2s, x4s, x8s, x16s, x)
+		vector_map = self.vector_branch.forward(x2s, x4s, x8s, x16s, x)
 		return mask, vector_map

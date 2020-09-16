@@ -296,14 +296,14 @@ class VotingNet(nn.Module):
 		:param local_path: the given path on your machine
 		"""
 		super(VotingNet, self).__init__()
-		self.backbone = VotingNetBackbone(True, pretrained, local_path)
-		self.mask_branch = VotingNetMaskBranch()
-		self.vector_branch = VotingNetVectorBranch()
+		self.backbone: nn.Module = VotingNetBackbone(True, pretrained, local_path)
+		self.mask_branch: nn.Module = VotingNetMaskBranch()
+		self.vector_branch: nn.Module = VotingNetVectorBranch()
 
 	def forward(self, x) -> (torch.Tensor, torch.Tensor):
-		x2s, x4s, x8s, x16s, x = self.backbone(x)
-		mask = self.mask_branch(x2s, x4s, x8s, x16s, x)
-		vector_map = self.vector_branch(x2s, x4s, x8s, x16s, x)
+		x2s, x4s, x8s, x16s, x = self.backbone.forward(x)
+		mask = self.mask_branch.forward(x2s, x4s, x8s, x16s, x)
+		vector_map = self.vector_branch.forward(x2s, x4s, x8s, x16s, x)
 		return mask, vector_map
 
 
@@ -329,9 +329,9 @@ class VotingNetWithBg(nn.Module):
 		self.vector_branch = VotingNetVectorBranch()
 
 	def forward(self, x) -> (torch.Tensor, torch.Tensor):
-		x2s, x4s, x8s, x16s, x = self.backbone(x)
-		mask = self.mask_branch(x2s, x4s, x8s, x16s, x)
-		vector_map = self.vector_branch(x2s, x4s, x8s, x16s, x)
+		x2s, x4s, x8s, x16s, x = self.backbone.forward(x)
+		mask = self.mask_branch.forward(x2s, x4s, x8s, x16s, x)
+		vector_map = self.vector_branch.forward(x2s, x4s, x8s, x16s, x)
 		return mask, vector_map
 
 

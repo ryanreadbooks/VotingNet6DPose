@@ -28,21 +28,13 @@ def main():
 	batch_size = cfgs.TRAINING_CONFIGS['batch_size']
 	linemod_dataloader = torch_data.DataLoader(linemod_dataset, batch_size, shuffle=True, pin_memory=True)
 
-	for data in linemod_dataloader:
-		color_img, mask_target, vector_map_target, cls_target, path = data
-		print(color_img.shape)
-		print(mask_target.shape)
-		print(vector_map_target.shape)
-		print(cls_target)
-		print(path)
-
 	# init the network
-	# network = VotingNetSimple(freeze_backbone=True, freeze_mask_branch=False,
-	#                           pretrained='remote')
-	# mask_loss_fn = torch.nn.CrossEntropyLoss()
-	# vector_loss_fn = torch.nn.SmoothL1Loss()
-	# trainer = Trainer(network=network, mask_loss_fn=mask_loss_fn, vector_loss_fn=vector_loss_fn)
-	# trainer.train(linemod_dataloader, resume=False)
+	network = VotingNetSimple(freeze_backbone=True, freeze_mask_branch=False,
+	                          pretrained='remote')
+	mask_loss_fn = torch.nn.CrossEntropyLoss()
+	vector_loss_fn = torch.nn.SmoothL1Loss()
+	trainer = Trainer(network=network, mask_loss_fn=mask_loss_fn, vector_loss_fn=vector_loss_fn)
+	trainer.train(linemod_dataloader, resume=False)
 
 
 if __name__ == '__main__':
