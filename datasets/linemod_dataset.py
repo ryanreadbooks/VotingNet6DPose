@@ -235,7 +235,7 @@ class LinemodDatasetProvider(object):
 		"""
 		mask_single = cv2.imread(path, cv2.IMREAD_GRAYSCALE).astype(np.float32)
 		# shape (h, w)
-		mask = np.where(mask_single == 255, 0., 1.)  # we only use 1 and 0 for the mask, 0 for object, 1 for the background
+		mask = np.where(mask_single == 255, 0, 1)  # we only use 1 and 0 for the mask, 0 for object, 1 for the background
 
 		return torch.from_numpy(mask)
 

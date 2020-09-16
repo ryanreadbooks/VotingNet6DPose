@@ -24,5 +24,5 @@ This is a 6D pose network based on PVNet
 There are some steps you need to finish before running the program.
 
 * Specify the *path of the dataset* in your own machine in **configs/constants.py**
-* 
+* Specify the training configurations in **configs/training_configs.py**
 

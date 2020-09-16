@@ -32,7 +32,7 @@ def main():
 	network = VotingNetSimple(freeze_backbone=True, freeze_mask_branch=False,
 	                          pretrained='remote')
 	mask_loss_fn = torch.nn.CrossEntropyLoss()
-	vector_loss_fn = torch.nn.SmoothL1Loss()
+	vector_loss_fn = torch.nn.SmoothL1Loss(reduction='sum')
 	trainer = Trainer(network=network, mask_loss_fn=mask_loss_fn, vector_loss_fn=vector_loss_fn)
 	trainer.train(linemod_dataloader, resume=False)
 

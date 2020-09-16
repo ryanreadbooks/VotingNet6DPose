@@ -54,7 +54,7 @@ class VotingNetMaskBranchWithBgSimple(nn.Module):
 		)
 		self.up2to1 = nn.UpsamplingBilinear2d(scale_factor=2)
 
-		# maybe for we use the sigmoid in the output
+		# still use softmax here, first channel is object, second channel is background
 		self.conv6 = nn.Sequential(
 			nn.Conv2d(in_channels=64, out_channels=2, kernel_size=1, stride=1, bias=True),
 		)
