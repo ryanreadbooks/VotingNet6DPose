@@ -116,8 +116,8 @@ class Trainer(object):
 					print('Checking loss: mask loss: {:.10f}, vector loss: {:.6f}'.format(mask_loss, vector_loss))
 					print('Checking loss: {:.6f} in epoch {:d} with step {:d}: '.format(multi_loss, epoch, i))
 
-			# step the optimizer
-			self.optimizer.step()
+				# step the optimizer
+				self.optimizer.step()
 			if self.scheduler is not None:
 				self.scheduler.step(epoch)
 

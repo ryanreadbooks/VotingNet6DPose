@@ -67,7 +67,7 @@ class VotingNetMaskBranchWithBgSimple(nn.Module):
 		:param x8s: 1/8 subsampled map, shape (128, h/4, w/4)
 		:param x16s: 1/16 subsampled map, shape (256, h/16, h/16)
 		:param x: output of backbone, shape (256, h/16, w/16)
-		:return:
+		:return: shape (2, h, w)
 		"""
 		x = self.conv1(x)
 		x = self.conv2(x)
@@ -104,31 +104,31 @@ class VotingNetVectorBranchSimple(nn.Module):
 		self.up16to8 = nn.UpsamplingBilinear2d(scale_factor=2)
 
 		self.conv3 = nn.Sequential(
-			nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
-			nn.BatchNorm2d(num_features=256),
+			nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False),
+			nn.BatchNorm2d(num_features=128),
 			nn.LeakyReLU(0.1, True)
 		)
-		self.channel128to256 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=1, stride=1)
+		# self.channel128to256 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=1, stride=1)
 		self.up8to4 = nn.UpsamplingBilinear2d(scale_factor=2)
 
 		self.conv4 = nn.Sequential(
-			nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
-			nn.BatchNorm2d(num_features=256),
+			nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
+			nn.BatchNorm2d(num_features=64),
 			nn.LeakyReLU(0.1, True)
 		)
-		self.channel64to256 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=1, stride=1)
+		# self.channel64to256 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=1, stride=1)
 		self.up4to2 = nn.UpsamplingBilinear2d(scale_factor=2)
 
 		self.conv5 = nn.Sequential(
-			nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
-			nn.BatchNorm2d(num_features=256),
+			nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
+			nn.BatchNorm2d(num_features=64),
 			nn.LeakyReLU(0.1, True)
 		)
-		self.channel64to256_b = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=1, stride=1)
+		# self.channel64to256_b = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=1, stride=1)
 		self.up2to1 = nn.UpsamplingBilinear2d(scale_factor=2)
 
 		self.conv6 = nn.Sequential(
-			nn.Conv2d(in_channels=256, out_channels=output_channel, kernel_size=1, stride=1, bias=False),
+			nn.Conv2d(in_channels=64, out_channels=output_channel, kernel_size=1, stride=1, bias=False),
 			nn.BatchNorm2d(num_features=output_channel)
 		)
 
@@ -137,7 +137,7 @@ class VotingNetVectorBranchSimple(nn.Module):
 		forward pass, the following shapes ignore the batch size channel
 		:param x2s: 1/2 subsampled map, shape (64, h/2, w/2)
 		:param x4s: 1/4 subsampled map, shape (64, h/4, w/4)
-		:param x8s: 1/8 subsampled map, shape (128, h/4, w/4)
+		:param x8s: 1/8 subsampled map, shape (128, h/8, w/8)
 		:param x16s: 1/16 subsampled map, shape (256, h/16, h/16)
 		:param x: output of backbone, shape (256, h/16, w/16)
 		:return:
@@ -145,15 +145,15 @@ class VotingNetVectorBranchSimple(nn.Module):
 		x = self.conv1(x)
 		x = self.conv2(x)  # shape (256, h/16, w/16)
 		x = self.up16to8(x + x16s)  # shape (256, h/8, w/8)
-		x = self.conv3(x)  # shape (256, h/8, w/8)
-		x = x + self.channel128to256(x8s)  # shape (256, h/8, w/8)
-		x = self.up8to4(x)  # shape (256, h/4, w/4)
-		x = self.conv4(x)  # shape (256, h/4, w/4)
-		x = x + self.channel64to256(x4s)  # shape (256, h/4, w/4)
-		x = self.up4to2(x)  # shape (256, h/2, w/2)
-		x = self.conv5(x)  # shape (256, h/2, w/2)
-		x = x + self.channel64to256_b(x2s)  # shape (256, h/2, w/2)
-		x = self.up2to1(x)  # shape (256, h, w)
+		x = self.conv3(x)  # shape (128, h/8, w/8)
+		x = x + x8s  # shape (128, h/8, w/8)
+		x = self.up8to4(x)  # shape (128, h/4, w/4)
+		x = self.conv4(x)  # shape (64, h/4, w/4)
+		x = x + x4s  # shape (64, h/4, w/4)
+		x = self.up4to2(x)  # shape (64, h/2, w/2)
+		x = self.conv5(x)  # shape (64, h/2, w/2)
+		x = x + x2s  # shape (64, h/2, w/2)
+		x = self.up2to1(x)  # shape (64, h, w)
 		x = self.conv6(x)  # shape (output_channel, h, w)
 		return x
 

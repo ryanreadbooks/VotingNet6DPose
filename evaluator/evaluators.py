@@ -25,12 +25,13 @@ from utils import ICPRefinement
 
 
 class LinemodEvaluator(object):
-	def __init__(self, network: torch.nn.Module, category: str, refinement: bool = False):
+	def __init__(self, network: torch.nn.Module, category: str, refinement: bool = False, simple: bool = False):
 		"""
 		Init function
 		:param network: the network model to be evaluated
 		:param category: which class the model belongs
 		:param refinement: use icp refinement of not, default=False
+		:param simple: whether to use simple format or not, when in simple situation, no OutputExtractor is needed
 		"""
 		super(LinemodEvaluator, self).__init__()
 		if category not in constants.LINEMOD_OBJECTS_NAME:
@@ -42,11 +43,12 @@ class LinemodEvaluator(object):
 		self.network = network
 		self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 		self.network.to(self.device)
-		self.network.eval()
 
 		self.voting_procedure = VoteProcedure((constants.LINEMOD_IMG_HEIGHT, constants.LINEMOD_IMG_WIDTH))
 		self.refinement = None
+		self.simple = simple
 		if refinement:
+			self.network.eval()
 			self.refinement = ICPRefinement(category=category)
 
 	def predict_keypoints(self, pred_mask: np.ndarray, pred_vector_map: np.ndarray) -> np.ndarray:
@@ -117,7 +119,10 @@ class LinemodEvaluator(object):
 			miou_list.append(miou)
 			# process every image in batch one by one
 			for j in range(batch_size):
-				obj_vmap: np.ndarray = LinemodOutputExtractor.extract_vector_field_by_name(pred_vmap[j], name=self.category)
+				if not self.simple:
+					obj_vmap: np.ndarray = LinemodOutputExtractor.extract_vector_field_by_name(pred_vmap[j], name=self.category)
+				else:
+					obj_vmap: np.ndarray = pred_vmap[j]
 				# shape (9, 2), the first point is the location of object center
 				pred_keypoints: np.nadarry = self.voting_procedure.provide_keypoints(binary_masks[j], obj_vmap)
 				# prediction transform, (3, 4)

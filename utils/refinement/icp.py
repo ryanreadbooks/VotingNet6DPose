@@ -120,6 +120,7 @@ class ICPRefinement(object):
 		scene_cloud: np.ndarray = geometry_utils.depth_to_point_cloud(camera_k, depth=masked_depth)  # shape (n, 3)
 		m = scene_cloud.shape[0]
 		# sample the model points to meet the number of points in scene cloud
+		# todo, maybe this isn't right, maybe you can't sample the corresponding points from model points
 		idx: np.ndarray = np.random.choice(model_pts.shape[0], m)
 		model_cloud: np.ndarray = model_pts[idx]
 		model_cloud: np.ndarray = geometry_utils.transform_pts(model_cloud, pose)
