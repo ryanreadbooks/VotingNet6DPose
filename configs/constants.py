@@ -10,7 +10,7 @@ import numpy as np
 # path to the dataset and model saving
 DATASET_PATH_ROOT = r'/content/LINEMOD'
 MODEL_SAVE_PATH = '/content/voting_net_6d/log_info'
-EVALUATOR_RESULTS_PATH = ''
+EVALUATOR_RESULTS_PATH = '/content/voting_net_6d/log_info'
 
 # number of classes in linemod dataset
 NUM_CLS_LINEMOD = 13

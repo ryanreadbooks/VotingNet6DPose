@@ -65,7 +65,6 @@ if __name__ == '__main__':
 		# 通道方向取argmax得到预测的每个像素点所属的类别
 		binary_mask = pred_mask.argmax(dim=1, keepdim=True)[0, 0]
 		print('Binary mask shape', binary_mask.shape)  # shape (480, 640)
-		print('Binary sum: ', binary_mask.sum())
 		# 将mask二值化用来显示
 		binary_mask = torch.where(binary_mask == 0, torch.tensor(255).to(device), torch.tensor(0).to(device))
 		binary_mask_np = binary_mask.cpu().detach().numpy().astype(np.uint8)

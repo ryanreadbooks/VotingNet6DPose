@@ -43,12 +43,12 @@ class LinemodEvaluator(object):
 		self.network = network
 		self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 		self.network.to(self.device)
+		self.network.eval()
 
 		self.voting_procedure = VoteProcedure((constants.LINEMOD_IMG_HEIGHT, constants.LINEMOD_IMG_WIDTH))
 		self.refinement = None
 		self.simple = simple
 		if refinement:
-			self.network.eval()
 			self.refinement = ICPRefinement(category=category)
 
 	def predict_keypoints(self, pred_mask: np.ndarray, pred_vector_map: np.ndarray) -> np.ndarray:
@@ -79,7 +79,8 @@ class LinemodEvaluator(object):
 		                          dataset_size=30,
 		                          transform=image_transform,
 		                          need_bg=True,
-		                          onehot=False)
+		                          onehot=False,
+		                          simple=self.simple)
 		dataloader = Data.DataLoader(linemod_dataset, batch_size=2, pin_memory=True)
 
 		# init metrics storing space
@@ -183,7 +184,7 @@ class LinemodEvaluator(object):
 		accuracies['rot_thres'] = angle_threshold
 		accuracies['tra_thres'] = trans_threshold
 
-		print('Accuracy: \n', accuracies)
+		# print('Accuracy: \n', accuracies)
 
 		return accuracies
 
@@ -231,21 +232,27 @@ class LinemodEvaluator(object):
 		pred_mask = torch.softmax(pred_mask, dim=1)
 		# make it to binary mask, 0-background, 255-object
 		binary_mask = pred_mask.argmax(dim=1, keepdim=True)[0, 0]
-		# visualize the binary mask
-		cls_label: int = constants.LINEMOD_OBJECTS_NAME.index(self.category)
-		binary_mask = torch.where(binary_mask == cls_label, torch.tensor(255).to(self.device), torch.tensor(0).to(self.device))
-		binary_mask_np: np.ndarray = binary_mask.cpu().detach().numpy().astype(np.uint8)
+
 		if constants.EVALUATOR_RESULTS_PATH == '':
 			# default path for saving the results
 			mask_save_path = 'log_info/results/predicted_{}_mask.png'.format(self.category)
 		else:
 			mask_save_path = os.path.join(constants.EVALUATOR_RESULTS_PATH, 'predicted_{}_mask.png'.format(self.category))
-		# save the mask result
-		Image.fromarray(binary_mask_np, 'L').save(mask_save_path)
 
 		# voting procedure
 		# extract the correspondence from vector map，shape (18, h, w)
-		object_vector_map: np.ndarray = LinemodOutputExtractor.extract_vector_field_by_name(pred_vector_map[0], self.category)
+		if not self.simple:
+			object_vector_map: np.ndarray = LinemodOutputExtractor.extract_vector_field_by_name(pred_vector_map[0], self.category)
+			cls_label: int = constants.LINEMOD_OBJECTS_NAME.index(self.category)
+		else:
+			object_vector_map: np.ndarray = pred_vector_map[0]
+			cls_label: int = 0
+		# visualize the binary mask
+		binary_mask = torch.where(binary_mask == cls_label, torch.tensor(255).to(self.device), torch.tensor(0).to(self.device))
+		binary_mask_np: np.ndarray = binary_mask.cpu().detach().numpy().astype(np.uint8)
+		# save the mask result
+		Image.fromarray(binary_mask_np, 'L').save(mask_save_path)
+
 		# from image mask to 0-1 mask
 		object_binary_mask = np.where(binary_mask_np == 255, 1, 0)  # shape (h, w)
 		# we can get the keypoints now
@@ -263,7 +270,7 @@ class LinemodEvaluator(object):
 		test_image_with_box = draw_3d_bbox(test_image, pred_keypoints[1:], 'blue')
 
 		# save the result
-		box_save_path = constants.EVALUATOR_RESULTS_PATH + 'predicted_{}_3dbox.png'.format(self.category)
+		box_save_path = constants.EVALUATOR_RESULTS_PATH + '/predicted_{}_3dbox.png'.format(self.category)
 		test_image_with_box.save(box_save_path)
 		total_time = inference_took_time + voting_took_time
 		print('Pipeline took total time: {:.6f}'.format(total_time))

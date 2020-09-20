@@ -10,6 +10,7 @@ from typing import List, Tuple, Dict
 
 import numpy as np
 from configs.constants import NUM_KEYPOINT
+from utils.decorators import deprecated
 
 
 class VoteProcedure(object):
@@ -20,6 +21,7 @@ class VoteProcedure(object):
 		self.n_hypotheses = 50  # number of keypoint hypotheses
 		self.height, self.width = img_size
 
+	@deprecated
 	@staticmethod
 	def naive_vote(vmap: np.ndarray, n_out: int = 1) -> Tuple[List, np.ndarray]:
 		"""
@@ -276,7 +278,6 @@ if __name__ == '__main__':
 	dif_norm = np.linalg.norm(dif, axis=0)
 	temp_vmap = dif / (dif_norm + epss)
 	temp_vmap = np.repeat(temp_vmap, 9, axis=0)
-	# VoteProcedure.naive_vote(temp_vmap)
 
 	# test ransac voting
 	ma = np.random.rand(width1, height1) * 5

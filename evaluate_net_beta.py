@@ -19,7 +19,7 @@ def main():
 	# Define a evaluator for network for cat
 	evaluator = LinemodEvaluator(net, 'cat', refinement=False)
 	accuracies: Dict = evaluator.evaluate()
-	save_dict_to_txt(accuracies, 'log_info/results/cat_accuracies.txt')
+	save_dict_to_txt(accuracies, '/content/voting_net_6d/log_info/results/cat_accuracies.txt')
 	print(accuracies)
 
 

@@ -57,7 +57,7 @@ def calculate_add(pred_pose: np.ndarray, gt_pose: np.ndarray, points: np.ndarray
 
 def calculate_add_s(pred_pose: np.ndarray, gt_pose: np.ndarray, points: np.ndarray) -> float:
 	r"""
-	Calculate the ADD-S metric. This metirc is less strict than ADD metirc
+	Calculate the ADD-S metric. This metric is less strict than ADD metric
 	:math:`ADD-S = \sum_{x1 \in {M}}{min_{x2 \in{M}} (R * x1 + T)-(R_p * x2 + T_p)} / m`
 
 	:param pred_pose: the predicted pose, array with shape (3, 4), [R|t]
