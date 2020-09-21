@@ -22,7 +22,7 @@ def main():
 	img_transform = torch_transform.Compose([torch_transform.ToTensor(),
 	                                         torch_transform.Normalize(mean=constants.IMAGE_MEAN, std=constants.IMAGE_STD)])
 	linemod_dataset = Linemod(root_dir=constants.DATASET_PATH_ROOT, train=True,
-	                          category='cat',
+	                          category=cfgs.TRAIN_CATEGORY,
 	                          transform=img_transform,
 	                          simple=True)
 	batch_size = cfgs.TRAINING_CONFIGS['batch_size']

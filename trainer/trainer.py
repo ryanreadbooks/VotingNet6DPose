@@ -142,9 +142,9 @@ class Trainer(object):
 				save_info = self.network.state_dict()
 				if constants.MODEL_SAVE_PATH == '':
 					# Default path for saving the model params
-					save_path = 'log_info/' + 'simple_cat_{:d}.pth'.format(epoch)
+					save_path = 'log_info/' + 'simple_{}_{:d}.pth'.format(cfgs.TRAIN_CATEGORY, epoch)
 				else:
-					save_path = os.path.join(constants.MODEL_SAVE_PATH, 'simple_cat_{:d}.pth'.format(epoch))
+					save_path = os.path.join(constants.MODEL_SAVE_PATH, 'simple_{}_{:d}.pth'.format(cfgs.TRAIN_CATEGORY, epoch))
 				torch.save(save_info, save_path)
 
 
