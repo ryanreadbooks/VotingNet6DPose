@@ -21,9 +21,9 @@ LINEMOD_OBJECTS_NAME = ['ape', 'benchvise', 'cam', 'can', 'cat', 'driller', 'duc
 
 # todo complete the diameter of linemod object
 LINEMOD_OBJ_DIAMETER = {
-	'ape': 0.0, 'benchvise': 0.0, 'cam': 0.0, 'can': 0.0,
-	'cat': 15.2633, 'driller': 0.0, 'duck': 0.0,
-	'eggbox': 0.0, 'glue': 0.0, 'holepuncher': 0.0,
+	'ape': 9.74298, 'benchvise': 0.0, 'cam': 0.0, 'can': 0.0,
+	'cat': 15.2633, 'driller': 25.9425, 'duck': 10.7131,
+	'eggbox': 0.0, 'glue': 0.0, 'holepuncher': 14.8204,
 	'iron': 0.0, 'lamp': 0.0, 'phone': 0.0
 }
 
