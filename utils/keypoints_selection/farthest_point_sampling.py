@@ -1,3 +1,9 @@
+"""
+@ Author: ryanreadbooks
+@ Time: 9/25/2020, 14:59
+@ File name: farthest_point_sampling.py
+@ File description: 最远点采样实现
+"""
 import numpy as np
 
 

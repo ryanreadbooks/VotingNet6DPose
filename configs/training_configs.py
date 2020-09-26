@@ -20,7 +20,7 @@ Indication:
 TRAINING_CONFIGS: dict = {
 	'lr': 0.001,
 	'optimizer': 'sgd',
-	'batch_size': 2,
+	'batch_size': 4,
 	'weight_decay': 5e-4,
 	'momentum': 0.99,
 	'epoch': 200,
@@ -36,3 +36,8 @@ TEST_CONFIGS: dict = {
 }
 
 TRAIN_CATEGORY = 'cat'
+
+"""
+What kind of keypoints you want? corners of the bbox - corners; of keypoints from FPS - fps
+"""
+KEYPOINT_TYPE = 'corners'   # 'corners' or 'fps'

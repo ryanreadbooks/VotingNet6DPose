@@ -58,7 +58,7 @@ class VotingNetBackbone(nn.Module):
 		self.conv_dilated2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, padding=2, dilation=2)
 
 		for p in self.parameters():
-			p.requires_grad = False
+			p.requires_grad = True
 
 	def forward(self, x) -> Tuple:
 		x = self.conv1(x)
