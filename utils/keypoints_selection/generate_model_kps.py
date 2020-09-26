@@ -7,7 +7,7 @@
 
 import os
 import numpy as np
-from utils.inout import load_model_points
+from utils.io_utils import load_model_points
 from .farthest_point_sampling import farthest_point_sampling
 from utils.geometry_utils import non_homo_to_homo
 from datasets import LinemodDatasetProvider
