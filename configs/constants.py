@@ -21,10 +21,19 @@ LINEMOD_OBJECTS_NAME = ['ape', 'benchvise', 'cam', 'can', 'cat', 'driller', 'duc
 
 # todo complete the diameter of linemod object
 LINEMOD_OBJ_DIAMETER = {
-	'ape': 9.74298, 'benchvise': 0.0, 'cam': 0.0, 'can': 0.0,
-	'cat': 15.2633, 'driller': 25.9425, 'duck': 10.7131,
-	'eggbox': 0.0, 'glue': 0.0, 'holepuncher': 14.8204,
-	'iron': 0.0, 'lamp': 0.0, 'phone': 0.0
+	'ape': 9.74298,
+	'benchvise': 28.6908,
+	'cam': 17.1593,
+	'can': 19.3416,
+	'cat': 15.2633,
+	'driller': 25.9425,
+	'duck': 10.7131,
+	'eggbox': 17.6364,
+	'glue': 16.4857,
+	'holepuncher': 14.8204,
+	'iron': 30.3153,
+	'lamp': 28.5155,
+	'phone': 20.8394
 }
 
 NUM_KEYPOINT = 9
@@ -34,4 +43,4 @@ IMAGE_STD = [0.229, 0.224, 0.225]
 
 CAMERA = np.array([[572.4114, 0., 325.2611],
                    [0., 573.57043, 242.04899],
-                   [0., 0., 1.]], dtype=np.float32)
+                   [0., 0., 1.]], dtype=np.float64)

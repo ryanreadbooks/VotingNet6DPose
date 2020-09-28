@@ -17,7 +17,7 @@ def main():
 	print('Model loaded into {}, evaluation starts...'.format(device))
 
 	# Define a evaluator for network for cat
-	evaluator = LinemodEvaluator(net, 'cat', refinement=False, simple=True)
+	evaluator = LinemodEvaluator(net, 'cat', refinement=False, simple=True, need_model_origin=False)
 	accuracies: Dict = evaluator.evaluate()
 	save_dict_to_txt(accuracies, '/content/voting_net_6d/log_info/results/simple_cat_accuracies.txt')
 	print(accuracies)

@@ -25,7 +25,8 @@ from utils import ICPRefinement
 
 
 class LinemodEvaluator(object):
-	def __init__(self, network: torch.nn.Module, category: str, refinement: bool = False, simple: bool = False):
+	def __init__(self, network: torch.nn.Module, category: str, refinement: bool = False, simple: bool = False,
+	             need_model_origin: bool = False):
 		"""
 		Init function
 		:param network: the network model to be evaluated
@@ -39,7 +40,14 @@ class LinemodEvaluator(object):
 		model_path = os.path.join(constants.DATASET_PATH_ROOT, category, category + '.xyz')
 		self.category = category
 		self.model_points, self.model_keypoints = LinemodDatasetProvider.provide_model_points(model_path)
+		self.need_model_origin = need_model_origin
+		if need_model_origin:
+			temp = np.zeros((self.model_keypoints.shape[0] + 1, 3), dtype=np.float32)
+			temp[1:, :] = self.model_keypoints
+			print(temp)
+			self.model_keypoints = temp
 		self.diameter = constants.LINEMOD_OBJ_DIAMETER[category]  # unit: cm
+		assert self.diameter != 0, "Diameter of object {} is 0, plz fill in".format(self.category)
 		self.network = network
 		self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 		self.network.to(self.device)
@@ -76,7 +84,7 @@ class LinemodEvaluator(object):
 		                                      transforms.Normalize(mean=constants.IMAGE_MEAN, std=constants.IMAGE_STD)])
 		linemod_dataset = Linemod(root_dir=constants.DATASET_PATH_ROOT,
 		                          train=False, category=self.category,
-		                          dataset_size=30,
+		                          dataset_size=50,
 		                          transform=image_transform,
 		                          need_bg=True,
 		                          onehot=False,
@@ -98,11 +106,11 @@ class LinemodEvaluator(object):
 		for i, data in enumerate(dataloader):
 			mask_label: torch.Tensor
 			img, mask_label, vmap_label, label, img_path = data  # all torch.Tensor
-			img, vmap_label, label = img.to(self.device), vmap_label.to(self.device), label.to(self.device)
+			img, label = img.to(self.device), label.to(self.device)
 			batch_size = img.shape[0]
 			out: Tuple = self.network(img)
-			pred_masks: torch.Tensor = out[0]  # shape (n, 13+1, h, w)
-			pred_vmap: np.ndarary = out[1].cpu().detach().numpy()  # shape (n, 234, h, w)
+			pred_masks: torch.Tensor = out[0]  # shape (n, 13+1(or 1+1=2), h, w)
+			pred_vmap: np.ndarary = out[1].cpu().detach().numpy()  # shape (n, 234(or 18), h, w)
 			# use softmax and argmax to find the probability
 			pred_masks: torch.Tensor = torch.softmax(pred_masks, dim=1)
 			binary_masks: torch.Tensor = pred_masks.argmax(dim=1)  # shape (n, h, w)
@@ -126,12 +134,17 @@ class LinemodEvaluator(object):
 					obj_vmap: np.ndarray = pred_vmap[j]
 				# shape (9, 2), the first point is the location of object center
 				pred_keypoints: np.nadarry = self.voting_procedure.provide_keypoints(binary_masks[j], obj_vmap)
-				# prediction transform, (3, 4)
+				# predicted pose, (3, 4)
 				pred_pose: np.ndarray = geometry_utils.solve_pnp(object_pts=self.model_keypoints,
-				                                                 image_pts=pred_keypoints[1:],
+				                                                 image_pts=pred_keypoints if self.need_model_origin else pred_keypoints[1:],
 				                                                 camera_k=constants.CAMERA)  # shape (3, 4)
 				# Load the GT rotation and translation
 				gt_pose: np.ndarray = LinemodDatasetProvider.provide_pose(img_path[j])  # shape (3, 4)
+				image_label_path = img_path[j].replace('JPEGImages', 'labels')
+				image_label_path = image_label_path.replace('jpg', 'txt')
+				gt_keypoints = LinemodDatasetProvider.provide_keypoints_coordinates(image_label_path)[1].numpy()
+				print('GT Keypoints: \n', gt_keypoints)
+				print('Pred Keypoints: \n', pred_keypoints)
 
 				if self.refinement is not None:
 					# do the icp process
@@ -145,33 +158,31 @@ class LinemodEvaluator(object):
 					proj_error_refined: float = metrics.projection_error(pts_3d=self.model_points, camera_k=constants.CAMERA,
 					                                                     pred_pose=pred_pose_refined,
 					                                                     gt_pose=gt_pose)
+
 					# according to the errors, determine the pose is correct or not
-					add_acc_list_refined.append(
-						metrics.check_pose_correct(val1=add_error_refined, threshold1=add_threshold, metric='add', diameter=self.diameter))
-					adds_acc_list_refined.append(
-						metrics.check_pose_correct(val1=adds_error_refined, threshold1=add_threshold, metric='add-s', diameter=self.diameter))
-					rot_tra_arr_list_refined.append(
-						metrics.check_pose_correct(val1=rot_error_refined, threshold1=angle_threshold, metric='5cm5', val2=tra_error_refined,
-						                           threshold2=trans_threshold))
-					projection_acc_list_refined.append(
-						metrics.check_pose_correct(val1=proj_error_refined, threshold1=proj_threshold, metric='projection'))
+					add_acc_list_refined.append(add_error_refined < add_threshold * self.diameter)
+					adds_acc_list_refined.append(adds_error_refined < add_threshold * self.diameter)
+					rot_tra_arr_list_refined.append(rot_error_refined < angle_threshold and tra_error_refined < trans_threshold)
+					projection_acc_list_refined.append(proj_error_refined < proj_threshold)
 
 				# calculate all kinds of errors
 				add_error: float = metrics.calculate_add(pred_pose, gt_pose, self.model_points)
 				adds_error: float = metrics.calculate_add_s(pred_pose, gt_pose, self.model_points)
 				rot_error: float = metrics.rotation_error(pred_pose[:, :3], gt_pose[:, :3])
 				tra_error: float = metrics.translation_error(pred_pose[:, -1], gt_pose[:, -1])
-				proj_error: float = metrics.projection_error(pts_3d=self.model_points, camera_k=constants.CAMERA, pred_pose=pred_pose,
+				proj_error: float = metrics.projection_error(pts_3d=self.model_points, camera_k=constants.CAMERA,
+				                                             pred_pose=pred_pose,
 				                                             gt_pose=gt_pose)
-				# according to the errors, determine the pose is correct or not
-				add_acc_list.append(metrics.check_pose_correct(val1=add_error, threshold1=add_threshold, metric='add', diameter=self.diameter))
-				adds_acc_list.append(metrics.check_pose_correct(val1=adds_error, threshold1=add_threshold, metric='add-s', diameter=self.diameter))
-				rot_tra_arr_list.append(metrics.check_pose_correct(val1=rot_error, threshold1=angle_threshold, metric='5cm5', val2=tra_error,
-				                                                   threshold2=trans_threshold))
-				projection_acc_list.append(metrics.check_pose_correct(val1=proj_error, threshold1=proj_threshold, metric='projection'))
+
+				# rewrite the check_pose_correct function
+				add_acc_list.append(add_error < add_threshold * self.diameter)
+				adds_acc_list.append(adds_error < add_threshold * self.diameter)
+				rot_tra_arr_list.append((rot_error < angle_threshold) and (tra_error < trans_threshold))
+				projection_acc_list.append(proj_error < proj_threshold)
 
 		# summary all metrics
 		accuracies: Dict = self.summary(add_acc_list, adds_acc_list, rot_tra_arr_list, projection_acc_list, miou_list)
+
 		if self.refinement is not None:
 			accuracies_refined: Dict = self.summary(add_acc_list_refined, adds_acc_list_refined, rot_tra_arr_list_refined,
 			                                        projection_acc_list_refined,
@@ -200,11 +211,11 @@ class LinemodEvaluator(object):
 		"""
 		result = dict()
 		result['category'] = self.category
-		result['add'] = statistics.mean(add)
-		result['add-s'] = statistics.mean(add_s)
-		result['5cm5degree'] = statistics.mean(rot_tra)
-		result['projection'] = statistics.mean(projection)
-		result['miou'] = statistics.mean(miou)
+		result['add'] = np.mean(add)
+		result['add-s'] = np.mean(add_s)
+		result['5cm5degree'] = np.mean(rot_tra)
+		result['projection'] = np.mean(projection)
+		result['miou'] = np.mean(miou)
 		return result
 
 	def pipeline(self, img_path: str) -> np.ndarray:

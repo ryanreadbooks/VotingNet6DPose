@@ -93,9 +93,11 @@ def transform_pts(points: np.ndarray, pose: np.ndarray) -> np.ndarray:
 	:param pose: pose array with shape (3, 4), [R|t]
 	:return: the transformed points, array with shape (n, 3)
 	"""
+	assert (points.shape[1] == 3)
 	r = pose[:, :3]  # predicted rotation matrix, shape of (3, 3)
-	t = pose[:, -1].reshape((-1, 1))  # predicted translation, shape of (3, 1)
-	points_transformed = r @ points.T + t
+	t = pose[:, -1].reshape((3, 1))  # predicted translation, shape of (3, 1)
+	points_transformed = r.dot(points.T) + t
+
 	return points_transformed.T
 
 
@@ -128,7 +130,7 @@ def depth_to_point_cloud(camera_k, depth: np.ndarray) -> np.ndarray:
 	return pts
 
 
-def solve_pnp(object_pts: np.ndarray, image_pts: np.ndarray, camera_k: np.ndarray, method=cv2.SOLVEPNP_EPNP):
+def solve_pnp(object_pts: np.ndarray, image_pts: np.ndarray, camera_k: np.ndarray, method=cv2.SOLVEPNP_ITERATIVE):
 	"""
 	Solve the PnP problem
 	:param object_pts: the points in object coordinate, shape (n, 3)
@@ -138,9 +140,13 @@ def solve_pnp(object_pts: np.ndarray, image_pts: np.ndarray, camera_k: np.ndarra
 	:return: the calculated transformation matrix, shape (3, 4)
 	"""
 	assert object_pts.shape[0] == image_pts.shape[0], 'number of points do not match.'
-	dist_coef = np.zeros(shape=[8, 1], dtype='float64')
-	_, r_vec, t_vec = cv2.solvePnP(objectPoints=object_pts, imagePoints=image_pts, cameraMatrix=camera_k,
-	                               distCoeffs=dist_coef, flags=method)
+	# dist_coef = np.zeros(shape=[8, 1], dtype='float64')
+	_, r_vec, t_vec = cv2.solvePnP(objectPoints=object_pts.astype(np.float64),
+	                               imagePoints=image_pts.astype(np.float64),
+	                               cameraMatrix=camera_k.astype(np.float64),
+	                               distCoeffs=None,
+	                               useExtrinsicGuess=True,
+	                               flags=method)
 	r_mat, _ = cv2.Rodrigues(r_vec)  # from rotation vector to rotation matrix (3, 3)
 	transformation = np.hstack([r_mat, t_vec.reshape((-1, 1))])
 	return transformation

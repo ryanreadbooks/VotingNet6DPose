@@ -9,7 +9,7 @@ from PIL import Image
 import cv2
 from configs import constants
 from utils.geometry_utils import get_model_corners
-from utils.io_utils.inout import load_model_points
+from utils.io_utils.inout import load_model_points, get_ply_model
 from utils.io_utils import load_depth_image
 
 
@@ -118,6 +118,7 @@ class Linemod(torch_utils_data.Dataset):
 				self.data_img_path.append(data_img_path)
 				self.data_mask_path.append(data_mask_path)
 				self.data_labels_path.append(data_label_path)
+		print('datasize', self.data_size)
 
 	def __getitem__(self, index: int) -> Tuple:  # color, mask, vector maps, cls_label, color_image_path
 		"""
@@ -376,27 +377,27 @@ class LinemodDatasetProvider(object):
 		:param path: given path
 		:return: model points; model keypoints
 		"""
-		points: np.ndarray = load_model_points(path=path)
-		kps: np.ndarray = get_model_corners(points)  # shape (8,3)
+		points: np.ndarray = load_model_points(path=path).astype(np.float64)
+		# points: np.ndarray = get_ply_model(path=path)
+		kps: np.ndarray = get_model_corners(points).astype(np.float64)  # shape (8,3)
 		return points, kps
 
-
 # Module testing
-if __name__ == '__main__':
-	import torchvision.transforms as transforms
-
-	t = transforms.Compose([transforms.ToTensor(),
-	                        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-	                                             std=[0.229, 0.224, 0.225], inplace=True)])
-	dataset = Linemod(r'E:\1Downloaded\datasets\LINEMOD_from_yolo-6d', False, 'cat', 4, transform=t, need_bg=True, onehot=False)
-	dataloader = torch_utils_data.DataLoader(dataset, batch_size=2, shuffle=True, num_workers=0)
-
-	for j, data in enumerate(dataloader):
-		print("index: ", j)
-		colorimg, maskimg, coormap, cls_target, color_img_path = data
-		print(f'color shape: {colorimg.shape}')
-		print(f'mask shape: {maskimg.shape}')
-		print(f'coormap shape: {coormap.shape}')
-		print(f'class label: {cls_target}')
-		print(color_img_path)
-		print(maskimg[0][cls_target[0]].sum())
+# if __name__ == '__main__':
+# 	import torchvision.transforms as transforms
+#
+# 	t = transforms.Compose([transforms.ToTensor(),
+# 	                        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+# 	                                             std=[0.229, 0.224, 0.225], inplace=True)])
+# 	dataset = Linemod(r'E:\1Downloaded\datasets\LINEMOD_from_yolo-6d', False, 'cat', 4, transform=t, need_bg=True, onehot=False)
+# 	dataloader = torch_utils_data.DataLoader(dataset, batch_size=2, shuffle=True, num_workers=0)
+#
+# 	for j, data in enumerate(dataloader):
+# 		print("index: ", j)
+# 		colorimg, maskimg, coormap, cls_target, color_img_path = data
+# 		print(f'color shape: {colorimg.shape}')
+# 		print(f'mask shape: {maskimg.shape}')
+# 		print(f'coormap shape: {coormap.shape}')
+# 		print(f'class label: {cls_target}')
+# 		print(color_img_path)
+# 		print(maskimg[0][cls_target[0]].sum())

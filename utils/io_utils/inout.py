@@ -1,6 +1,7 @@
 from typing import Dict
 import numpy as np
 from PIL import Image
+from plyfile import PlyData
 
 
 def load_model_points(path: str) -> np.ndarray:
@@ -19,6 +20,19 @@ def load_model_points(path: str) -> np.ndarray:
 			xyz.append(list(map(float, line.split())))
 	xyz = np.float32(xyz)
 	return xyz[:, :3]  # we only need the coordinates
+
+
+def get_ply_model(path):
+	"""
+	Load the ply model of the object
+	"""
+	ply = PlyData.read(path)
+	data = ply.elements[0].data
+	x = data['x']
+	y = data['y']
+	z = data['z']
+	model = np.stack([x, y, z], axis=-1) * 100.  # convert m to cm
+	return model
 
 
 def load_depth_image(path: str) -> np.ndarray:

@@ -82,7 +82,7 @@ class VoteProcedure(object):
 
 		return keypoint_coordinates, votes
 
-	def ransac_vote(self, mask: np.ndarray, vmap: np.ndarray, threshold: float = 0.99) -> Dict[int, Tuple[np.ndarray, np.ndarray]]:
+	def ransac_vote(self, mask: np.ndarray, vmap: np.ndarray, threshold: float = 0.9) -> Dict[int, Tuple[np.ndarray, np.ndarray]]:
 		"""
 		ransac voting procedure, which is more efficient
 		:param mask: a set of coordinates that belongs to the masked object, array with shape (h, w).
@@ -98,19 +98,18 @@ class VoteProcedure(object):
 		# get the population
 		population = np.where(mask >= 1)[:2]
 		population: List[Tuple] = list(zip(population[1], population[0]))  # the set of coordinates, format List[(x,y)]
-		# todo delete
-		# print('Number of population to vote: ', len(population))
 		# process every keypoint
 		assert (vmap.shape[0] / 2 == NUM_KEYPOINT), 'number of keypoints does not match'
 		for i in range(NUM_KEYPOINT):
 			v_k = vmap[i * 2: (i + 1) * 2]  # shape of (2, h, w)
-			candidates: np.ndarray = self._generate_candidates_from_population(population, v_k)
+			candidates: np.ndarray = self._generate_candidates_from_population(population, v_k)  # (self.n_hypotheses, 2)
 			# init a space to store the votes the candidates get
 			candidates_votes: np.ndarray = np.zeros((self.n_hypotheses, 1))
 			# init a list to store the candidates and their scores
 			candidates_copy: np.ndarray = copy.deepcopy(candidates)
 			# the rest of the population takes part in the voting
 			for voter in population:
+				# voter's location
 				voter_x, voter_y = voter[0], voter[1]
 				candidates_copy[:, 0] -= voter_x
 				candidates_copy[:, 1] -= voter_y
@@ -119,15 +118,15 @@ class VoteProcedure(object):
 				# voter vector here is not unit maybe, due to the incorrectness of the neural network, so we manually make it a unit vector
 				voter_vector = v_k[:, voter_y, voter_x].reshape((2, 1))
 				voter_vector /= np.linalg.norm(voter_vector)
-				scores = candidates_unit_vector @ voter_vector  # shape pf (self.n_hypotheses, 1)
+				scores = candidates_unit_vector @ voter_vector  # shape of (self.n_hypotheses, 1)
 				# print('scores: \n', scores)
 				candidates_votes += (scores >= self.threshold)
 			# one keypoint has been processed, update the score_dict
 			score_dict[i] = (candidates, candidates_votes)
-		# print(score_dict)
+		# print('score_dict of all hypotheses: \n', score_dict)
 		return score_dict
 
-	def _vote_average(self, score: Dict, weighted=False) -> Dict[int, np.ndarray]:
+	def _vote_average(self, score: Dict, weighted=True) -> Dict[int, np.ndarray]:
 		"""
 		calculate the mean position of ransac voting results
 		:param score: result from ransac voting
@@ -139,12 +138,24 @@ class VoteProcedure(object):
 			candidates, votes = value[0], value[1]
 			if weighted:
 				total_votes = np.sum(votes)
-				weights = (votes / total_votes).reshape(-1)
-				result = np.average(candidates, axis=0, weights=weights)
+				if total_votes != 0:
+					weights = (votes / total_votes).reshape(-1)
+					result = np.average(candidates, axis=0, weights=weights)
+				else:
+					print('Total is zero, now switching into the mean mode')
+					result = np.mean(candidates, axis=0)
 			else:
 				result = np.mean(candidates, axis=0)
 			result_keypoint[key] = result
 		return result_keypoint
+
+	def _vote_covariance(self, score: Dict) -> Dict[int, np.ndarray]:
+		"""
+		calculate the mean position of ransac voting results
+		:param score: result from ransac voting
+		:return: covariance of the keypoints
+		"""
+		pass
 
 	def _generate_candidates_from_population(self, population: List, vectors: np.ndarray) -> np.ndarray:
 		"""
@@ -212,7 +223,7 @@ class VoteProcedure(object):
 
 		return inlier_kps_dict
 
-	def provide_keypoints(self, mask: np.ndarray, vmap: np.ndarray, threshold: float = 0.99) -> np.ndarray:
+	def provide_keypoints(self, mask: np.ndarray, vmap: np.ndarray, threshold: float = 0.9) -> np.ndarray:
 		"""
 		the combination of ransac voting and vote averaging
 		ransac voting procedure, which is more efficient
