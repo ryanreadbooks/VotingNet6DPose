@@ -56,7 +56,7 @@ def non_homo_to_homo(pts) -> np.ndarray:
 
 def project_3d_2d(pts_3d: np.ndarray, camera_intrinsic: np.ndarray, transformation: np.ndarray) -> np.ndarray:
 	"""
-	project 3d points to 2d image plane and return
+	project 3d points to 2d image plane and return the result
 	:param pts_3d: 3d points to be projected, shape of (n, 3)
 	:param camera_intrinsic: camera intrinsics, shape of (3, 3)
 	:param transformation: the transformation matrix, shape (3, 4), [R|t]
