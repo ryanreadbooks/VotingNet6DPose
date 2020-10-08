@@ -8,6 +8,8 @@
 import numpy as np
 import cv2
 
+from configs import constants
+
 
 def get_model_corners(model_pts: np.ndarray) -> np.ndarray:
 	"""
@@ -150,3 +152,21 @@ def solve_pnp(object_pts: np.ndarray, image_pts: np.ndarray, camera_k: np.ndarra
 	r_mat, _ = cv2.Rodrigues(r_vec)  # from rotation vector to rotation matrix (3, 3)
 	transformation = np.hstack([r_mat, t_vec.reshape((-1, 1))])
 	return transformation
+
+
+def compute_translation_by_center_and_depth(center: np.ndarray, tz: float) -> np.ndarray:
+	"""
+	Compute the translation vector based on the center keypoint and depth
+	@param center: center keypoint, shape (2, 1)
+	@param tz: depth of the corresponding keypoint, singular
+	@return: the computed translation vector
+	"""
+	px = constants.CAMERA[0, 2]
+	py = constants.CAMERA[1, 2]
+	fx = constants.CAMERA[0, 0]
+	fy = constants.CAMERA[1, 1]
+	cx = center[0]
+	cy = center[1]
+	tx = (cx - px) * tz / fx
+	ty = (cy - py) * tz / fy
+	return np.array([tx, ty, tz]).reshape((-1, 1))
