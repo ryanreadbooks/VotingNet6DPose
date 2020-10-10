@@ -40,4 +40,4 @@ TRAIN_CATEGORY = 'cat'
 """
 What kind of keypoints you want? corners of the bbox - corners; of keypoints from FPS - fps
 """
-KEYPOINT_TYPE = 'corners'   # 'corners' or 'fps'
+KEYPOINT_TYPE = 'fps'   # 'corners' or 'fps'

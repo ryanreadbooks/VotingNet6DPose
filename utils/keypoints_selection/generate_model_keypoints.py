@@ -1,7 +1,7 @@
 """
 @ Author: ryanreadbooks
 @ Time: 9/25/2020, 15:00
-@ File name: generate_model_kps.py
+@ File name: generate_model_keypoints.py
 @ File description: Generate the keypoints of the model by farthest point sampling algorithm
 """
 

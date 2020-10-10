@@ -1,2 +1,2 @@
-from .farthest_point_sampling import farthest_point_sampling
-from .generate_model_kps import generate_model_kps
+from .farthest_point_sampling import *
+from .generate_model_keypoints import generate_model_kps, generate_fps_keypoints

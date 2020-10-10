@@ -9,8 +9,8 @@ import numpy as np
 # evaluator result path == '/content/voting_net_6d/log_info/results'
 # path to the dataset and model saving
 DATASET_PATH_ROOT = r'/content/LINEMOD'
-MODEL_SAVE_PATH = '/content/voting_net_6d/log_info'
-EVALUATOR_RESULTS_PATH = '/content/voting_net_6d/log_info'
+MODEL_SAVE_PATH = '/content/VotingNet6DPose/log_info'
+EVALUATOR_RESULTS_PATH = '/content/VotingNet6DPose/log_info'
 
 # number of classes in linemod dataset
 NUM_CLS_LINEMOD = 13
@@ -36,7 +36,7 @@ LINEMOD_OBJ_DIAMETER = {
 	'phone': 20.8394
 }
 
-NUM_KEYPOINT = 9
+NUM_KEYPOINT = 8
 
 IMAGE_MEAN = [0.485, 0.456, 0.406]
 IMAGE_STD = [0.229, 0.224, 0.225]

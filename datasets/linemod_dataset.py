@@ -7,9 +7,10 @@ import torch
 import torch.utils.data as torch_utils_data
 from PIL import Image
 import cv2
-from configs import constants
+
+from configs import constants, training_configs
 from utils.geometry_utils import get_model_corners
-from utils.io_utils.inout import load_model_points, get_ply_model
+from utils.io_utils.inout import load_model_points
 from utils.io_utils import load_depth_image
 
 
@@ -111,14 +112,17 @@ class Linemod(torch_utils_data.Dataset):
 			random.shuffle(value)
 			sampled = random.sample(value, each)
 			base_dir = os.path.join(root_dir, key)
+			labels = 'labels'
+			if training_configs.KEYPOINT_TYPE == 'fps':
+				labels = 'labels_fps'
 			for s in sampled:
 				data_img_path = os.path.join(base_dir, 'JPEGImages', s + '.jpg')
 				data_mask_path = os.path.join(base_dir, 'mask', s[-4:] + '.png')
-				data_label_path = os.path.join(base_dir, 'labels', s + '.txt')
+				data_label_path = os.path.join(base_dir, labels, s + '.txt')
 				self.data_img_path.append(data_img_path)
 				self.data_mask_path.append(data_mask_path)
 				self.data_labels_path.append(data_label_path)
-		print('datasize', self.data_size)
+		print('datasize: ', self.data_size)
 
 	def __getitem__(self, index: int) -> Tuple:  # color, mask, vector maps, cls_label, color_image_path
 		"""
