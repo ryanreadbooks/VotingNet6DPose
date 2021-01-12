@@ -15,13 +15,19 @@ class Residual(nn.Module):
         :param out_dim: output dimension
         """
         super(Residual, self).__init__()
-        self.conv1 = nn.Conv2d(inp_dim, int(out_dim / 2), 1, 1, bias=False)
-        self.bn1 = nn.BatchNorm2d(int(out_dim / 2))
+        # the channel must be at least 1
+        out_dim_half = max(1, int(out_dim / 2))
+
+        self.conv1 = nn.Conv2d(inp_dim, out_dim_half, 1, 1, bias=False)
+        self.bn1 = nn.BatchNorm2d(out_dim_half)
         self.relu = nn.ReLU()
-        self.conv2 = nn.Conv2d(int(out_dim / 2), int(out_dim / 2), 3, 1, 1, bias=False)
-        self.bn2 = nn.BatchNorm2d(int(out_dim / 2))
-        self.conv3 = nn.Conv2d(int(out_dim / 2), out_dim, 1, 1, bias=False)
+
+        self.conv2 = nn.Conv2d(out_dim_half, out_dim_half, 3, 1, 1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_dim_half)
+
+        self.conv3 = nn.Conv2d(out_dim_half, out_dim, 1, 1, bias=False)
         self.bn3 = nn.BatchNorm2d(out_dim)
+
         self.skip_layer = nn.Conv2d(inp_dim, out_dim, 1, 1, bias=False)
         self.skip_layer_bn = nn.BatchNorm2d(out_dim)
 

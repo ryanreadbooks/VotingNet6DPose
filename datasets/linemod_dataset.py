@@ -40,82 +40,49 @@ class Linemod(torch_utils_data.Dataset):
     Attention: make sure the listed sub-folders and files are in one single object folder
     """
 
-    _legal_categories = ['all', 'ape', 'benchvise', 'cam', 'can', 'cat', 'driller', 'duck',
+    _legal_categories = ['ape', 'benchvise', 'cam', 'can', 'cat', 'driller', 'duck',
                          'eggbox', 'glue', 'holepuncher', 'iron', 'lamp', 'phone']
 
     # todo: consider removing the dataset_size argument and use all training data
-    def __init__(self, root_dir, train=True, category: str = 'all', dataset_size: int = None,
-                 transform=None):
+    def __init__(self, train=True, category: str = 'cat', transform=None):
         """
         init function
-        :param root_dir: root path of the dataset on your local machine
         :param train: return data or not, default=True
         :param category: what object's data you need, you can specify a specific object, like cat
-        :param dataset_size: the number of data to return, default=780 for training and default=130 for testing
         :param transform: the transform you want to apply on the image
-        :param need_bg: need the mask label to contain the background class or not, default= False
         """
         super(Linemod, self).__init__()
-        self.root_dir = root_dir
-        self.dir_container = dict()
-        self.data_size = dataset_size
+        self.root_dir = constants.DATASET_PATH_ROOT
+        # filenames of all data are stored in this List
+        self.dir_list = list()
         self.data_img_path = list()  # list that stores JPEGImages's path
         self.data_mask_path = list()  # list that stores mask image's path
         self.data_labels_path = list()  # list that stores labels's path
         self.transform = transform
-        if dataset_size is None:
-            # set the default datasize for training and testing
-            if train:
-                self.data_size = 60 * constants.NUM_CLS_LINEMOD
-            else:
-                self.data_size = 10 * constants.NUM_CLS_LINEMOD
 
         train_or_test = 'train.txt'
         if not train:
             train_or_test = 'test.txt'
         if category not in self._legal_categories:
             raise ValueError('invalid value for category')
-        elif category == 'all':
-            object_names = constants.LINEMOD_OBJECTS_NAME
-        else:
-            object_names = [category]
-        # fetch all file(train or test) of all objects
-        for cls_name in object_names:
-            cls_data_path = os.path.join(root_dir, cls_name, train_or_test)
-            with open(cls_data_path, 'r') as f:
-                lines = f.readlines()
-                cls_data: List = [line.rstrip()[-10: -4] for line in lines]
-                self.dir_container[cls_name] = cls_data  # just like {'ape': ['000000', '000001', ...], 'benchvise': ['000000', '000001', ...]}
+        cls_data_path = os.path.join(self.root_dir, category, train_or_test)
+        with open(cls_data_path, 'r') as f:
+            lines = f.readlines()
+            self.dir_list: List = [line.rstrip()[-10: -4] for line in lines]
 
-        # randomly pick data_size data to form the dataset
-        each = self.data_size // constants.NUM_CLS_LINEMOD  # number of data for each class if use 'all'
-        for i, item in enumerate(self.dir_container.items()):
-            key, value = item
-            # need to change the self.data_size if only one object's data is needed
-            if category != 'all' and train:
-                # if we specify only one class object, we use all the training images of that class object
-                self.data_size = len(value)
-                each = len(value)
-            elif category != 'all' and not train:
-                each = self.data_size
-
-            if i == constants.NUM_CLS_LINEMOD - 1:
-                each = self.data_size - each * i  # the rest
-            # randomly pick each data
-            random.shuffle(value)
-            sampled = random.sample(value, each)
-            base_dir = os.path.join(root_dir, key)
-            labels = 'labels'
-            if training_configs.KEYPOINT_TYPE == 'fps':
-                labels = 'labels_fps'
-            for s in sampled:
-                data_img_path = os.path.join(base_dir, 'JPEGImages', s + '.jpg')
-                data_mask_path = os.path.join(base_dir, 'mask', s[-4:] + '.png')
-                data_label_path = os.path.join(base_dir, labels, s + '.txt')
-                self.data_img_path.append(data_img_path)
-                self.data_mask_path.append(data_mask_path)
-                self.data_labels_path.append(data_label_path)
-        print('datasize: ', self.data_size)
+        base_dir = os.path.join(self.root_dir, category)
+        labels = 'labels'
+        if training_configs.KEYPOINT_TYPE == 'fps':
+            labels = 'labels_fps'
+        for filname in self.dir_list:
+            data_img_path = os.path.join(base_dir, 'JPEGImages', filname + '.jpg')
+            data_mask_path = os.path.join(base_dir, 'mask', filname[-4:] + '.png')
+            data_label_path = os.path.join(base_dir, labels, filname + '.txt')
+            self.data_img_path.append(data_img_path)
+            self.data_mask_path.append(data_mask_path)
+            self.data_labels_path.append(data_label_path)
+        train_log = 'training' if train else 'testing'
+        print('Found {:d} {:s} data for category {:s}'.format(len(self.dir_list), train_log, category))
 
     def __getitem__(self, index: int) -> Tuple:  # color, mask, vector maps, cls_label, color_image_path
         """
@@ -139,7 +106,7 @@ class Linemod(torch_utils_data.Dataset):
         return color, mask, vector_maps, cls_label, data_img_path
 
     def __len__(self) -> int:
-        return self.data_size
+        return len(self.dir_list)
 
 
 class LinemodDatasetProvider(object):
@@ -159,11 +126,13 @@ class LinemodDatasetProvider(object):
     @staticmethod
     def provide_mask(path: str) -> torch.Tensor:
         """
-        Provide the simple mask for the simple network with less output channels. It is the binary that is returned.
+        Provide the simple mask for the network. It is the binary that is returned.
         :param path: given path
         :return: returned binary mask
         """
         mask_single = cv2.imread(path, cv2.IMREAD_GRAYSCALE).astype(np.float32)
+        print('mask max ', np.max(mask_single))
+        print('mask min ', np.min(mask_single))
         # shape (h, w)
         mask = np.where(mask_single == 255, 1, 0)  # we only use 1 and 0 for the mask, 0 for background, 1 for the object
 
@@ -316,18 +285,29 @@ class LinemodDatasetProvider(object):
 if __name__ == '__main__':
     import torchvision.transforms as transforms
 
-    t = transforms.Compose([transforms.ToTensor(),
-                            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                 std=[0.229, 0.224, 0.225], inplace=True)])
-    dataset = Linemod(r'E:\1Downloaded\datasets\LINEMOD_from_yolo-6d', False, 'cat', 4, transform=t)
+    # t = transforms.Compose([transforms.ToTensor(),
+    #                         transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    #                                              std=[0.229, 0.224, 0.225], inplace=True)])
+    t = transforms.ToTensor()
+    dataset = Linemod(train=True, category='cat', transform=t)
     dataloader = torch_utils_data.DataLoader(dataset, batch_size=2, shuffle=True, num_workers=0)
 
     for j, data in enumerate(dataloader):
         print("index: ", j)
-        colorimg, maskimg, coormap, cls_target, color_img_path = data
-        print(f'color shape: {colorimg.shape}')
-        print(f'mask shape: {maskimg.shape}')
-        print(f'coormap shape: {coormap.shape}')
+        color_img, mask_img, coor_map, cls_target, color_img_path = data
+        print(f'color shape: {color_img.shape}')
+        print(f'mask shape: {mask_img.shape}')
+        print(f'coormap shape: {coor_map.shape}')
         print(f'class label: {cls_target}')
         print(color_img_path)
-        print(maskimg[0][cls_target[0]].sum())
+        print(mask_img[0][cls_target[0]].sum())
+        if j == 0:
+            img = np.array(color_img.numpy()[0].transpose([1, 2, 0]) * 255, dtype=np.uint8)[:, :, ::-1]
+            print(np.sum(img))
+            cv2.imshow('color', img)
+            mask_ = mask_img.numpy()[0].astype(np.uint8)
+            mask_im = mask_ * 255
+            print(mask_.shape)
+            cv2.imshow('mask', np.array(mask_im, dtype=np.uint8))
+            cv2.waitKey(-1)
+            break

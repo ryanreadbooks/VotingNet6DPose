@@ -86,7 +86,7 @@ class Trainer(object):
 			for i, batch_data in enumerate(dataloader):
 				# training data shape clarification:
 				# color_img: shape (n, 3, h, w)
-				# mask_target: shape (n, h, w)(no onehot) or (n, num_class + 1, h, w)(onehot)
+				# mask_target: shape (n, h, w)(no one-hot) or (n, num_class + 1, h, w)(one-hot)
 				# vector_map_target: shape (n, n_class * n_keypoints * 2, h, w)
 				# cls_target: class label, shape (1, n)
 				color_img, mask_target, vector_map_target, cls_target, _ = batch_data
@@ -131,13 +131,6 @@ class Trainer(object):
 			print(log_info)
 			# hit milestone, save it
 			if (epoch + 1) in self.milestone:
-				timestamp = time.time()
-				# save_info = {
-				# 	'model': self.network.state_dict(),
-				# 	'lr': running_lr,
-				# 	'epoch': epoch,
-				# 	'timestamp': timestamp
-				# }
 				# todo: learn more about torch.save and .pth format
 				save_info = self.network.state_dict()
 				if constants.MODEL_SAVE_PATH == '':

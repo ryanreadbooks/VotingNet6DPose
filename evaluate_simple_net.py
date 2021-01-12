@@ -23,9 +23,7 @@ if __name__ == '__main__':
                               train=False, category='cat',
                               dataset_size=1,
                               transform=tra,
-                              need_bg=True,
-                              onehot=False,
-                              simple=True)
+                              need_bg=True)
 
     test_dataloader = Data.DataLoader(linemod_dataset, batch_size=1, pin_memory=True)
 

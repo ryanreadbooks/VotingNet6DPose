@@ -23,8 +23,7 @@ def main():
                                              torch_transform.Normalize(mean=constants.IMAGE_MEAN, std=constants.IMAGE_STD)])
     linemod_dataset = Linemod(root_dir=constants.DATASET_PATH_ROOT, train=True,
                               category=cfgs.TRAIN_CATEGORY,
-                              transform=img_transform,
-                              simple=True)
+                              transform=img_transform)
     batch_size = cfgs.TRAINING_CONFIGS['batch_size']
     linemod_dataloader = torch_data.DataLoader(linemod_dataset, batch_size, shuffle=True, pin_memory=True)
 
@@ -39,6 +38,6 @@ def main():
 if __name__ == '__main__':
     # main()
     net = VotingNet()
-    y = net(torch.rand(2,3,480,640))
+    y = net(torch.rand(2, 3, 480, 640))
     print(y[0].shape)
     print(y[1].shape)

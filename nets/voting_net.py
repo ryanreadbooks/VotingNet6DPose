@@ -34,8 +34,8 @@ class MaskBranch(nn.Module):
         self.conv5 = Residual(64, 64)
         self.up2to1 = nn.UpsamplingBilinear2d(scale_factor=2)
 
-        self.conv6 = Residual(64, 2)
-        self.conv11 = nn.Conv2d(2, 2, kernel_size=1, stride=1)
+        self.conv6 = Residual(64, 1)
+        self.conv11 = nn.Conv2d(1, 1, kernel_size=1, stride=1)
 
     def forward(self, x2s, x4s, x8s, x16s, x) -> torch.Tensor:
         """
