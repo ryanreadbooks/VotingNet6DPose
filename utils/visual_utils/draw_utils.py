@@ -33,7 +33,7 @@ def draw_3d_bbox(img: Image, box: np.ndarray, color='green') -> Image:
 	x7, y7 = box[6, 0], box[6, 1]
 	x8, y8 = box[7, 0], box[7, 1]
 	line_color = (0, 255, 0)
-	if color is 'blue':
+	if color == 'blue':
 		line_color = (0, 0, 255)
 	line_width = 3
 	drawer.line(xy=[x1, y1, x2, y2], fill=line_color, width=line_width)

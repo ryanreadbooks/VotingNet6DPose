@@ -2,14 +2,14 @@ from typing import Dict
 
 import torch
 
-from nets import VotingNetSimple
+from nets import VotingNet
 from evaluator.evaluators import LinemodEvaluator
 from utils.io_utils.inout import save_dict_to_txt
 
 
 def main():
 	# Load the network
-	net = VotingNetSimple()
+	net = VotingNet()
 	last_state = torch.load('/content/voting_net_6d/log_info/simple_cat_119.pth')
 	net.load_state_dict(last_state)
 	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
