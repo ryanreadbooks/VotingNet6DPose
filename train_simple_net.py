@@ -37,4 +37,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    net = VotingNet()
+    y = net(torch.rand(2,3,480,640))
+    print(y[0].shape)
+    print(y[1].shape)

@@ -4,9 +4,6 @@
 @ File name: voting_net.py
 @ File description: implement the simple network model. Simple network has less output channels in the end.
 """
-from typing import Any
-
-from abc import ABC
 
 import torch
 import torch.nn.modules as nn
@@ -24,43 +21,21 @@ class MaskBranch(nn.Module):
 
     def __init__(self) -> None:
         super(MaskBranch, self).__init__()
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=256),
-            nn.LeakyReLU(0.1, inplace=True)
-        )
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=256),
-            nn.LeakyReLU(0.1, True)
-        )
+        self.conv1 = Residual(256, 256)
+        self.conv2 = Residual(256, 256)
         self.up16to8 = nn.UpsamplingBilinear2d(scale_factor=2)
 
-        self.conv3 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=128),
-            nn.LeakyReLU(0.1, True)
-        )
+        self.conv3 = Residual(256, 128)
         self.up8to4 = nn.UpsamplingBilinear2d(scale_factor=2)
 
-        self.conv4 = nn.Sequential(
-            nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=64),
-            nn.LeakyReLU(0.1, True)
-        )
+        self.conv4 = Residual(128, 64)
         self.up4to2 = nn.UpsamplingBilinear2d(scale_factor=2)
 
-        self.conv5 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=64),
-            nn.LeakyReLU(0.1, True)
-        )
+        self.conv5 = Residual(64, 64)
         self.up2to1 = nn.UpsamplingBilinear2d(scale_factor=2)
 
-        # still use softmax here, first channel is object, second channel is background
-        self.conv6 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=2, kernel_size=1, stride=1, bias=True),
-        )
+        self.conv6 = Residual(64, 2)
+        self.conv11 = nn.Conv2d(2, 2, kernel_size=1, stride=1)
 
     def forward(self, x2s, x4s, x8s, x16s, x) -> torch.Tensor:
         """
@@ -82,7 +57,8 @@ class MaskBranch(nn.Module):
         x = self.conv5(x)
         x = self.up2to1(x + x2s)
         x = self.conv6(x)  # shape (n, num_class + 1, h, w)
-        return x  # we still use the softmax, first channel is object, second channel is background
+        x = self.conv11(x)
+        return torch.sigmoid(x)  # we use sigmoid to generate the probalibity
 
 
 class VectorBranch(nn.Module):
@@ -94,46 +70,21 @@ class VectorBranch(nn.Module):
         super(VectorBranch, self).__init__()
         output_channel = constants.NUM_KEYPOINT * 2
 
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=256),
-            nn.LeakyReLU(0.1, True)
-        )
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=256),
-            nn.LeakyReLU(0.1, True)
-        )
+        self.conv1 = Residual(256, 256)
+        self.conv2 = Residual(256, 256)
         self.up16to8 = nn.UpsamplingBilinear2d(scale_factor=2)
 
-        self.conv3 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=128),
-            nn.LeakyReLU(0.1, True)
-        )
-        # self.channel128to256 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=1, stride=1)
         self.up8to4 = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.conv3 = Residual(256, 128)
+        self.conv4 = Residual(128, 64)
 
-        self.conv4 = nn.Sequential(
-            nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=64),
-            nn.LeakyReLU(0.1, True)
-        )
-        # self.channel64to256 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=1, stride=1)
         self.up4to2 = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.conv5 = Residual(64, 64)
 
-        self.conv5 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(num_features=64),
-            nn.LeakyReLU(0.1, True)
-        )
-        # self.channel64to256_b = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=1, stride=1)
         self.up2to1 = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.conv6 = Residual(64, output_channel)
 
-        self.conv6 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=output_channel, kernel_size=1, stride=1, bias=False),
-            nn.BatchNorm2d(num_features=output_channel)
-        )
+        self.conv11 = nn.Conv2d(output_channel, output_channel, kernel_size=1, stride=1)
 
     def forward(self, x2s, x4s, x8s, x16s, x):
         """
@@ -158,6 +109,7 @@ class VectorBranch(nn.Module):
         x = x + x2s  # shape (64, h/2, w/2)
         x = self.up2to1(x)  # shape (64, h, w)
         x = self.conv6(x)  # shape (output_channel, h, w)
+        x = self.conv11(x)
         return x
 
 
