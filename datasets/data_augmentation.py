@@ -5,9 +5,10 @@
 @ File description: The implementation of data augmentation, including rotation, translation and scaling
 """
 
+import random
 import numpy as np
 import cv2
-import random
+from PIL import Image
 
 
 def rotate_im(img: np.ndarray, kps: np.ndarray, angle: float):
@@ -98,7 +99,7 @@ def random_scale_im(img, kps, scale=0.2):
 
 class RandomTransform:
 
-    def __call__(self, img, mask, keypoints):
+    def __call__(self, img:Image.Image, mask, keypoints):
         """
         Perform random transformation, including random rotation, random translation and random scaling.
         @param img: the image to be transformed
@@ -106,3 +107,5 @@ class RandomTransform:
         @param keypoints:
         @return: the transformed image
         """
+
+
