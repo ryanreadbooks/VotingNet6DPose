@@ -7,6 +7,7 @@
 
 import numpy as np
 from configs import constants
+from configs.configuration import regular_config
 
 
 class OutputExtractor(object):
@@ -31,7 +32,7 @@ class OutputExtractor(object):
 		:param cls: the vector map of cls you want to extract from out
 		:return: extracted vector map array of shape (2 * num_keypoints, h ,w)
 		"""
-		num_channel_per_class = constants.NUM_KEYPOINT * 2
+		num_channel_per_class = regular_config.num_keypoint * 2
 		return out[cls * num_channel_per_class: (cls + 1) * num_channel_per_class]
 
 

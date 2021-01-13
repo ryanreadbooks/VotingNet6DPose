@@ -94,3 +94,15 @@ def random_scale_im(img, kps, scale=0.2):
     img = canvas
 
     return img, kps_scaled
+
+
+class RandomTransform:
+
+    def __call__(self, img, mask, keypoints):
+        """
+        Perform random transformation, including random rotation, random translation and random scaling.
+        @param img: the image to be transformed
+        @param mask:
+        @param keypoints:
+        @return: the transformed image
+        """

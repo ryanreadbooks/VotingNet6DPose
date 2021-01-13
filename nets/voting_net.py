@@ -8,9 +8,9 @@
 import torch
 import torch.nn.modules as nn
 
-from configs import constants
 from .backbone import Backbone
 from .residual import Residual
+from configs.configuration import regular_config
 
 
 class MaskBranch(nn.Module):
@@ -68,7 +68,7 @@ class VectorBranch(nn.Module):
 
     def __init__(self):
         super(VectorBranch, self).__init__()
-        output_channel = constants.NUM_KEYPOINT * 2
+        output_channel = regular_config.num_keypoint * 2
 
         self.conv1 = Residual(256, 256)
         self.conv2 = Residual(256, 256)

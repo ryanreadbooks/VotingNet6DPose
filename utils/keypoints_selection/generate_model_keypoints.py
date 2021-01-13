@@ -73,6 +73,7 @@ def generate_fps_keypoints():
 	If you want to call this method, you need to make sure the necessary files exist.
 	You need *.xyz object model file, gt_poses folder in which contains ground poses of the model
 	"""
+	from configs.configuration import regular_config
 	for _, model_name in tqdm(enumerate(constants.LINEMOD_OBJECTS_NAME)):
-		path = os.path.join(constants.DATASET_PATH_ROOT, model_name)
+		path = os.path.join(regular_config.data_path_root, model_name)
 		generate_model_kps(path=path, model_name=model_name)

@@ -19,11 +19,7 @@ if __name__ == '__main__':
     # test_dataset = Linemod(constants.DATASET_PATH_ROOT, train=False, category='cat', dataset_size=1, transform=tra)
     # test_dataloader = Data.DataLoader(test_dataset, batch_size=1, pin_memory=True)
 
-    linemod_dataset = Linemod(root_dir=constants.DATASET_PATH_ROOT,
-                              train=False, category='cat',
-                              dataset_size=1,
-                              transform=tra,
-                              need_bg=True)
+    linemod_dataset = Linemod(train=False, transform=tra)
 
     test_dataloader = Data.DataLoader(linemod_dataset, batch_size=1, pin_memory=True)
 

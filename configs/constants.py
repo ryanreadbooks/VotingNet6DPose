@@ -10,7 +10,6 @@ MODEL_SAVE_PATH = '/content/VotingNet6DPose/log_info'
 EVALUATOR_RESULTS_PATH = '/content/VotingNet6DPose/log_info'
 
 # number of classes in linemod dataset
-NUM_CLS_LINEMOD = 13
 LINEMOD_IMG_HEIGHT = 480
 LINEMOD_IMG_WIDTH = 640
 LINEMOD_OBJECTS_NAME = ['ape', 'benchvise', 'cam', 'can', 'cat', 'driller', 'duck',
@@ -31,12 +30,6 @@ LINEMOD_OBJ_DIAMETER = {
     'lamp': 28.5155,
     'phone': 20.8394
 }
-
-"""
-What kind of keypoints you want? corners of the bbox - corners; of keypoints from FPS - fps
-"""
-NUM_KEYPOINT = 8
-KEYPOINT_TYPE = 'fps'   # 'corners -> 9' or 'fps -> 8'
 
 IMAGE_MEAN = [0.485, 0.456, 0.406]
 IMAGE_STD = [0.229, 0.224, 0.225]

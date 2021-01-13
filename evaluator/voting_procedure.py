@@ -9,7 +9,7 @@ import copy
 from typing import List, Tuple, Dict
 
 import numpy as np
-from configs.constants import NUM_KEYPOINT
+from configs.configuration import regular_config
 from utils.decorators import deprecated
 
 
@@ -99,8 +99,8 @@ class VoteProcedure(object):
 		population = np.where(mask >= 1)[:2]
 		population: List[Tuple] = list(zip(population[1], population[0]))  # the set of coordinates, format List[(x,y)]
 		# process every keypoint
-		assert (vmap.shape[0] / 2 == NUM_KEYPOINT), 'number of keypoints does not match'
-		for i in range(NUM_KEYPOINT):
+		assert (vmap.shape[0] / 2 == regular_config.num_keypoint), 'number of keypoints does not match'
+		for i in range(regular_config.num_keypoint):
 			v_k = vmap[i * 2: (i + 1) * 2]  # shape of (2, h, w)
 			candidates: np.ndarray = self._generate_candidates_from_population(population, v_k)  # (self.n_hypotheses, 2)
 			# init a space to store the votes the candidates get
