@@ -31,13 +31,4 @@ TRAINING_CONFIGS: dict = {
 	'lr_drop_gamma': 0.5
 }
 
-TEST_CONFIGS: dict = {
-	'batch_size': 1,
-}
-
 TRAIN_CATEGORY = 'cat'
-
-"""
-What kind of keypoints you want? corners of the bbox - corners; of keypoints from FPS - fps
-"""
-KEYPOINT_TYPE = 'fps'   # 'corners' or 'fps'

@@ -16,7 +16,6 @@ LINEMOD_IMG_WIDTH = 640
 LINEMOD_OBJECTS_NAME = ['ape', 'benchvise', 'cam', 'can', 'cat', 'driller', 'duck',
                         'eggbox', 'glue', 'holepuncher', 'iron', 'lamp', 'phone']
 
-# todo complete the diameter of linemod object
 LINEMOD_OBJ_DIAMETER = {
     'ape': 9.74298,
     'benchvise': 28.6908,
@@ -33,7 +32,11 @@ LINEMOD_OBJ_DIAMETER = {
     'phone': 20.8394
 }
 
+"""
+What kind of keypoints you want? corners of the bbox - corners; of keypoints from FPS - fps
+"""
 NUM_KEYPOINT = 8
+KEYPOINT_TYPE = 'fps'   # 'corners -> 9' or 'fps -> 8'
 
 IMAGE_MEAN = [0.485, 0.456, 0.406]
 IMAGE_STD = [0.229, 0.224, 0.225]

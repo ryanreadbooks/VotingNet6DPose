@@ -1,0 +1,37 @@
+# Configuration of some parameters are listed here
+
+path:
+  data-path-root: /home/ryan/Datasets/LINEMOD_keypoint_version
+  model-saved-path: log-info
+  result-path: log-info/results
+
+dataset-name: linemod
+category: cat
+num-of-class: 13
+img-width: 640
+img-height: 480
+
+num-keypoint: 8
+keypoint-type: fps
+
+camera:
+  fx: 572.4114
+  fy: 573.57043
+  cx: 325.2611
+  cy: 242.04599
+
+# Below configure the training parameters
+
+training:
+  lr: 0.001
+  optimizer: sgd
+  batch-size: 4
+  weight-decay: 5e-4
+  momentum: 0.99
+  epochs: 200
+  cuda: true
+  milestones: (20, 40, 60, 80, 100, 120, 160, 180, 200, 220)
+  log-train: true
+  lr-drop:
+    freq: 10
+    gamma: 0.8
