@@ -13,6 +13,7 @@ from utils.geometry_utils import get_model_corners
 from utils.io_utils.inout import load_model_points
 from utils.io_utils import load_depth_image
 from configs.configuration import regular_config
+from datasets.data_augmentation import RandomTransform
 
 
 class Linemod(torch_utils_data.Dataset):
@@ -41,7 +42,6 @@ class Linemod(torch_utils_data.Dataset):
     Attention: make sure the listed sub-folders and files are in one single object folder
     """
 
-    # todo: consider removing the dataset_size argument and use all training data
     def __init__(self, train=True, transform=None):
         """
         init function
@@ -56,6 +56,7 @@ class Linemod(torch_utils_data.Dataset):
         self.data_mask_path = list()  # list that stores mask image's path
         self.data_labels_path = list()  # list that stores labels's path
         self.transform = transform
+        self.random_transform = RandomTransform()
 
         train_or_test = 'train.txt'
         if not train:
@@ -80,7 +81,7 @@ class Linemod(torch_utils_data.Dataset):
         train_log = 'training' if train else 'testing'
         print('Found {:d} {:s} data for category {:s}'.format(len(self.dir_list), train_log, category))
 
-    def __getitem__(self, index: int) -> Tuple:  # color, mask, vector maps, cls_label, color_image_path
+    def __getitem__(self, index: int) -> Tuple:  # color, mask, vector_maps, cls_label, color_image_path
         """
         Get one data from the dataset
         :param index: index of the dataset
@@ -90,18 +91,22 @@ class Linemod(torch_utils_data.Dataset):
         data_mask_path: str = self.data_mask_path[index]
         data_label_path: str = self.data_labels_path[index]
         # retrieve relevant information
-        cls_label, vector_maps = LinemodDatasetProvider.provide_keypoints_vector_maps(data_label_path)
+
+        # cls_label, vector_maps = LinemodDatasetProvider.provide_keypoints_vector_maps(data_label_path)
+        # get the keypoints
+        cls_label, keypoints = LinemodDatasetProvider.provide_keypoints_coordinates(data_label_path)
+        # get the image
         color: Image = LinemodDatasetProvider.provide_image(data_img_path)
+        # get the mask: shape (h, w) -> binary mask
+        mask: np.ndarray = LinemodDatasetProvider.provide_mask(data_mask_path)
+        # add random transformation, transform the image and its corresponding mask and keypoints
+        color, mask, keypoints = self.random_transform(color, mask, keypoints.numpy())
 
-        # shape (h, w) -> binary mask
-        mask: torch.Tensor = LinemodDatasetProvider.provide_mask(data_mask_path)
+        vector_maps = LinemodDatasetProvider.provide_vector_map_by_keypoints(torch.from_numpy(keypoints))
 
-        # add random transformation
-
-        # transform the image if needed
         if self.transform is not None:
             color = self.transform(color)
-        return color, mask, vector_maps, cls_label, data_img_path
+        return color, torch.from_numpy(mask).float(), vector_maps, cls_label, data_img_path
 
     def __len__(self) -> int:
         return len(self.dir_list)
@@ -122,7 +127,7 @@ class LinemodDatasetProvider(object):
         return Image.open(path)
 
     @staticmethod
-    def provide_mask(path: str) -> torch.Tensor:
+    def provide_mask(path: str) -> np.ndarray:
         """
         Provide the simple mask for the network. It is the binary that is returned.
         :param path: given path
@@ -130,9 +135,9 @@ class LinemodDatasetProvider(object):
         """
         mask_single = cv2.imread(path, cv2.IMREAD_GRAYSCALE).astype(np.float32)
         # shape (h, w)
-        mask = np.where(mask_single == 255, 1, 0)  # we only use 1 and 0 for the mask, 0 for background, 1 for the object
+        mask = np.where(mask_single == 255, 1, 0).astype(np.uint8)  # we only use 1 and 0 for the mask, 0 for background, 1 for the object
 
-        return torch.from_numpy(mask).float()
+        return mask
 
     @staticmethod
     def provide_keypoints_coordinates(path: str) -> Tuple[int, torch.Tensor]:
@@ -159,25 +164,34 @@ class LinemodDatasetProvider(object):
         Provide the keypoints maps, which is a tensor of shape (num_keypoint x 2 x num_classes, H, W)
         :param path: given path to read the keypoints coordinates and generate keypoints maps,
                     which are unit vectors pointing from every pixel to the keypoint coordinates
-        :param simple: whether to return the simple vector map or not. The simple version of it has less output channels.
         :return: class label of the corresponding keypoints;
                 corresponding keypoints maps of shape (2 x n_keypoints x n_classes, H, W)
+        """
+        # get all the keypoints from file
+        cls_label, keypoints = LinemodDatasetProvider.provide_keypoints_coordinates(path=path)
+
+        vector_map = LinemodDatasetProvider.provide_vector_map_by_keypoints(keypoints)
+
+        return cls_label, vector_map
+
+    @staticmethod
+    def provide_vector_map_by_keypoints(keypoints: torch.Tensor) -> torch.Tensor:
+        """
+        Generate the vector map by keypoints
+        @param keypoints: the keypoints
+        @return:
         """
         # generating mesh for all pixels
         width: int = regular_config.img_width
         height: int = regular_config.img_height
         num_of_keypoints: int = regular_config.num_keypoint
-
         x = torch.linspace(0, width - 1, width)
         y = torch.linspace(0, height - 1, height)
         mesh = torch.meshgrid([y, x])
         # shape (2 * n_keypoints, H, W) with the first channel is x0-coordinate, the second channel is y0-coordinate
         pixel_coordinate = torch.cat([mesh[1][None], mesh[0][None]], dim=0).repeat(num_of_keypoints, 1, 1)
         # load the cls_label and keypoints
-        cls_label, keypoints = LinemodDatasetProvider.provide_keypoints_coordinates(path=path)
         channel = 2 * num_of_keypoints  # 2 x n_keypoints
-
-        cls_label = 0  # in simple version, we don't need the cls_label to be specific
         # for unity of the simple and full version of target, we still prepare a space for the target
         keypoints = keypoints.reshape((num_of_keypoints * 2, 1, 1))
         dif = keypoints - pixel_coordinate
@@ -191,7 +205,7 @@ class LinemodDatasetProvider(object):
         dif_norm: torch.Tensor = dif_norm.repeat(1, 1, 2, 1).reshape((-1, height, width))
         vector_map: torch.Tensor = dif / dif_norm  # shape (2 * n_keypoints, H, W)
 
-        return cls_label, vector_map
+        return vector_map
 
     @staticmethod
     def provide_rotation(path: str) -> np.ndarray:

@@ -16,6 +16,7 @@ class RegularConfig:
         root_path: str = os.path.split(abs_file_path)[0]
         config_file_path: str = os.path.join(root_path, 'configs.yml')
         f = open(config_file_path, 'r')
+
         overall_config = yaml.load(f, Loader=yaml.SafeLoader)
         path_config = overall_config['path']
         camera_config = overall_config['camera']
@@ -49,6 +50,11 @@ class RegularConfig:
         self.camera = np.array([[fx, 0, cx],
                                 [0, fy, cy],
                                 [0, 0, 1]])
+
+        transform_config = overall_config['random-transform']
+        self.random_rotate_angle = transform_config['rotate-angle']
+        self.random_scale = transform_config['scale']
+        self.random_translation = transform_config['translation']
 
         f.close()
 

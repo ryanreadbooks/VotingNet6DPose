@@ -16,6 +16,11 @@ img-height: 480
 num-keypoint: 9
 keypoint-type: corners
 
+random-transform:
+  rotate-angle: 30
+  scale: 0.2
+  translation: 30
+
 camera:
   fx: 572.4114
   fy: 573.57043
