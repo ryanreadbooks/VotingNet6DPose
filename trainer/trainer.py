@@ -149,8 +149,8 @@ class Trainer(object):
 
             # one epoch ended, should use scheduler.step()
             if self.scheduler is not None:
-                print('Scheduler')
-                self.scheduler.step(epoch)
+                print('Lr drop..')
+                self.scheduler.step()
 
             # hit milestone, save it
             if (epoch + 1) in self.milestone:

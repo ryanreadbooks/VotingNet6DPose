@@ -106,7 +106,7 @@ class Linemod(torch_utils_data.Dataset):
 
         if self.transform is not None:
             color = self.transform(color)
-        return color, torch.from_numpy(mask).float(), vector_maps, cls_label, data_img_path
+        return color, torch.from_numpy(mask).float(), vector_maps.float(), cls_label, data_img_path
 
     def __len__(self) -> int:
         return len(self.dir_list)

@@ -153,12 +153,13 @@ class RandomTransform:
         # translate back into the image region
         translate_im(img_arr, mask, keypoints, correction_x, correction_y)
 
-        cv2.imshow('img_arr', img_arr)
-        mask = np.where(mask == 1, 255, 0).astype(np.uint8)
-        cv2.imshow('mask', mask)
-        cv2.waitKey(-1)
+        # cv2.imshow('img_arr', img_arr)
+        # mask = np.where(mask == 1, 255, 0).astype(np.uint8)
+        # cv2.imshow('mask', mask)
+        # cv2.waitKey(-1)
+
         img_transformed = Image.fromarray(img_arr[:, :, ::-1], 'RGB')
-        draw_points(img_transformed, keypoints).show()
-        draw_3d_bbox(img_transformed, keypoints[1:, :]).show()
+        # draw_points(img_transformed, keypoints).show()
+        # draw_3d_bbox(img_transformed, keypoints[1:, :]).show()
 
         return img_transformed, mask, keypoints
