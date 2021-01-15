@@ -13,7 +13,7 @@ def main():
 	print('Model loaded into {}, evaluation starts...'.format(device))
 
 	# Define a evaluator for network for cat
-	evaluator = LinemodEvaluator(net, 'cat', refinement=False, simple=True)
+	evaluator = LinemodEvaluator(net, refinement=False, simple=True)
 	pred_pose = evaluator.pipeline(r'/content/LINEMOD/cat/JPEGImages/000002.jpg')
 	print(pred_pose)
 

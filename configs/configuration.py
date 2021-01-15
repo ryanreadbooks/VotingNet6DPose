@@ -49,7 +49,7 @@ class RegularConfig:
         cx, cy = camera_config['cx'], camera_config['cy']
         self.camera = np.array([[fx, 0, cx],
                                 [0, fy, cy],
-                                [0, 0, 1]])
+                                [0, 0, 1]], dtype=np.float64)
 
         transform_config = overall_config['random-transform']
         self.random_rotate_angle = transform_config['rotate-angle']
@@ -88,7 +88,7 @@ class TrainingConfig:
         self.gamma = config['lr-drop']['gamma']
 
         f.close()
-        self.display()
+        # self.display()
 
     def display(self):
         print('-------------Training configurations ----------------')

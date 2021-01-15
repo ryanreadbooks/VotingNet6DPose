@@ -10,7 +10,7 @@ from typing import List
 import numpy as np
 from tqdm import tqdm
 
-from configs.constants import CAMERA
+from configs.configuration import regular_config
 from datasets import LinemodDatasetProvider
 from utils.geometry_utils import *
 from utils.io_utils import load_model_points
@@ -48,7 +48,7 @@ def generate_model_kps(path: str, model_name: str):
 		# full pose
 		pose: np.ndarray = np.hstack([rotation, translation])
 		# project keypoints on to the image
-		projected_kps: np.ndarray = project_3d_2d(pts_3d=model_kps, camera_intrinsic=CAMERA, transformation=pose)
+		projected_kps: np.ndarray = project_3d_2d(pts_3d=model_kps, camera_intrinsic=regular_config.camera, transformation=pose)
 		# shape (8, 2), format of (x, y)
 		# normalize it
 		projected_kps[:, 0] /= 640.

@@ -1,43 +1,71 @@
 # Configuration of some parameters are listed here
 
+# specify a developing mode, anything you want
 mode: debug
 
+# specify the some paths
+# data-path-root: the location of the dataset
+# model-saved-path: the location to save the trained model
+# result-path: the location to save the evaluation results
 path:
   data-path-root: /home/ryan/Datasets/LINEMOD_keypoint_version
   model-saved-path: ''
   result-path: ''
 
+# dataset related
+# category: specify the category in the dataset for training
 dataset-name: linemod
 category: cat
 num-of-class: 13
 img-width: 640
 img-height: 480
 
-num-keypoint: 9
-keypoint-type: corners
+# specify the keypoint type
+# num-keypoint: 8 or 9
+# keypoint-type: fps or corners
+num-keypoint: 8
+keypoint-type: fps
 
+# random transformation arguments
 random-transform:
   rotate-angle: 30
   scale: 0.2
   translation: 30
 
+# camera setting
 camera:
   fx: 572.4114
   fy: 573.57043
   cx: 325.2611
   cy: 242.04599
 
-# Below configure the training parameters
 
+############################################
+# Below configure the training parameters ##
+############################################
+
+
+# lr: initial learning rate
+# optimizer: type of optimizer, sgd or adam
+# batch_size: batch size
+# weight_decay: weight decay
+# momentum: momentum
+# epochs: total epochs for training
+# cuda: use gpu
+# milestone: the epoch at which the model to be saved
+# log-train: log the training process
+# scheduler: which kind of scheduler to use, 'step', 'multistep', 'exponential'
+# freq: the learning rate drop every freq epoch
+# gamma: the learning rate drop at the rate of lr_drop_gamma according to the scheduler_type
 training:
-  lr: 0.001
+  lr: 0.0005
   optimizer: sgd
   batch-size: 2
-  weight-decay: 0.0005
+  weight-decay: 0.0004
   momentum: 0.99
-  epochs: 200
+  epochs: 500
   cuda: true
-  milestones: (20, 40, 60, 80, 100, 120, 160, 180, 200, 220)
+  milestones: (80, 100, 120, 200, 220, 300, 400, 500)
   log-train: true
   scheduler: step
   lr-drop:

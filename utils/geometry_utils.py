@@ -8,7 +8,7 @@
 import numpy as np
 import cv2
 
-from configs import constants
+from configs.configuration import regular_config
 
 
 def get_model_corners(model_pts: np.ndarray) -> np.ndarray:
@@ -161,10 +161,10 @@ def compute_translation_by_center_and_depth(center: np.ndarray, tz: float) -> np
     @param tz: depth of the corresponding keypoint, singular
     @return: the computed translation vector
     """
-    px = constants.CAMERA[0, 2]
-    py = constants.CAMERA[1, 2]
-    fx = constants.CAMERA[0, 0]
-    fy = constants.CAMERA[1, 1]
+    px = regular_config.camera[0, 2]
+    py = regular_config.camera[1, 2]
+    fx = regular_config.camera[0, 0]
+    fy = regular_config.camera[1, 1]
     cx = center[0]
     cy = center[1]
     tx = (cx - px) * tz / fx

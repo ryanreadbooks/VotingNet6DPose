@@ -26,7 +26,6 @@ class Trainer(object):
         :param mask_loss_fn: the loss function of mask branch
         :param vector_loss_fn: the loss function of vector map branch
         """
-        # train_cfgs = cfgs.TRAINING_CONFIGS
         self.network = network
         self.lr = cfgs.lr
         self.batch_size = cfgs.batch_size
@@ -137,6 +136,7 @@ class Trainer(object):
                     running_lr = self.lr
                     if self.scheduler is not None:
                         running_lr = self.scheduler.get_last_lr()
+
                     postfix = {'Mask loss': mask_loss.item(), 'Vector loss': vector_loss.item(), 'Total loss': total_loss.item(),
                                'Lr': running_lr}
                     pbar.set_postfix(postfix)

@@ -9,7 +9,7 @@ import numpy as np
 import scipy.spatial as scipy_spatial
 
 from utils import geometry_utils
-from configs.constants import CAMERA
+from configs.configuration import regular_config
 
 
 def fit_two_points(pts_a: np.ndarray, pts_b: np.ndarray):
@@ -104,7 +104,7 @@ class ICPRefinement(object):
 	def __init__(self, category: str):
 		self.category = category
 
-	def refine(self, depth: np.ndarray, mask: np.ndarray, pose: np.ndarray, model_pts: np.ndarray, camera_k: np.ndarray = CAMERA) -> np.ndarray:
+	def refine(self, depth: np.ndarray, mask: np.ndarray, pose: np.ndarray, model_pts: np.ndarray, camera_k: np.ndarray = regular_config.camera) -> np.ndarray:
 		"""
 		refine the estimated pose with icp
 		:param mask: the predicted binary mask, shape (h, w)

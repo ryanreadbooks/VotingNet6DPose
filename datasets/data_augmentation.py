@@ -151,7 +151,7 @@ class RandomTransform:
             # cross y border
             correction_y = -height // 3
         # translate back into the image region
-        translate_im(img_arr, mask, keypoints, correction_x, correction_y)
+        img_transformed, mask, keypoints = translate_im(img_arr, mask, keypoints, correction_x, correction_y)
 
         # cv2.imshow('img_arr', img_arr)
         # mask = np.where(mask == 1, 255, 0).astype(np.uint8)
